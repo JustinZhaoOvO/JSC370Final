@@ -6,7 +6,7 @@ Author: Boquan Zhao
 
 ## Introduction to this Project
 
-This project explores how a set of financial and macro indicators (implied volatility (VIX), the 10-year Treasury yield, gold prices, and the U.S. Dollar Index (DXY)) are associated with realized volatility of the S&P 500, using daily data from 2015 to 2025.
+This project explores how a set of financial and macro indicators (implied volatility (VIX), the 10-year Treasury yield, gold prices, the U.S. Dollar Index (DXY)) and weekday are associated with realized volatility of the S&P 500, using daily data from 2015 to 2025.
 
 We construct a 7-day rolling standard deviation of S&P 500 returns as the outcome variable `realized volatility` and fit three models: OLS linear regression, Random Forest, and XGBoost.
 
@@ -24,7 +24,7 @@ We construct a 7-day rolling standard deviation of S&P 500 returns as the outcom
 - Rate and gold contribute limited additional association with realized volatility beyond VIX.
 - DXY does not have a significant relationship with realized volatility.
 - No significant day-of-week effect on realized volatility was found.
-- OLS outperforms both tree-based models (RMSE = 0.369, R² = 0.434), suggesting the relationship between the predictors and log-volatility is largely linear.
+- OLS outperforms both tree-based models, suggesting the relationship between the predictors and log-volatility is largely linear.
 
 
 ### Limitations

@@ -164,7 +164,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Author: Boquan Zhao</p>
 <section id="introduction-to-this-project" class="level2">
 <h2 class="anchored" data-anchor-id="introduction-to-this-project">Introduction to this Project</h2>
-<p>This project explores how a set of financial and macro indicators (implied volatility (VIX), the 10-year Treasury yield, gold prices, and the U.S. Dollar Index (DXY)) are associated with realized volatility of the S&amp;P 500, using daily data from 2015 to 2025.</p>
+<p>This project explores how a set of financial and macro indicators (implied volatility (VIX), the 10-year Treasury yield, gold prices, the U.S. Dollar Index (DXY)) and weekday are associated with realized volatility of the S&amp;P 500, using daily data from 2015 to 2025.</p>
 <p>We construct a 7-day rolling standard deviation of S&amp;P 500 returns as the outcome variable <code>realized volatility</code> and fit three models: OLS linear regression, Random Forest, and XGBoost.</p>
 <section id="research-questions" class="level3">
 <h3 class="anchored" data-anchor-id="research-questions">Research Questions</h3>
@@ -184,7 +184,7 @@ ul.task-list li input[type="checkbox"] {
 <li>Rate and gold contribute limited additional association with realized volatility beyond VIX.</li>
 <li>DXY does not have a significant relationship with realized volatility.</li>
 <li>No significant day-of-week effect on realized volatility was found.</li>
-<li>OLS outperforms both tree-based models (RMSE = 0.369, R² = 0.434), suggesting the relationship between the predictors and log-volatility is largely linear.</li>
+<li>OLS outperforms both tree-based models, suggesting the relationship between the predictors and log-volatility is largely linear.</li>
 </ul>
 <section id="limitations" class="level3">
 <h3 class="anchored" data-anchor-id="limitations">Limitations</h3>

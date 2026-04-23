@@ -19,7 +19,7 @@ Financial markets do not move at a constant pace. Sometimes market is relatively
 
 One practical way to approach this is to look at a few market indicators that people often track. For example, the Implied volatility (VIX) index summarizes market expectations about future volatility, interest rates reflect broader macroeconomic conditions, and assets like gold or the U.S. Dollar Index are often considered as signals of market risk.
 
-This project will explore how these indicators are related to volatility of the S&P 500. Using data collected from public APIs, we combine market data(S&P 500, VIX, 10-year Treasury yield) with a small set of financial variables(gold and U.S. Dollar Index) and check whether they correlate with volatility.
+This project will explore how these indicators are related to volatility of the S&P 500. Using data collected from public APIs, we combine market data(S&P 500, VIX, 10-year Treasury yield, weekday) with a small set of financial variables(gold and U.S. Dollar Index) and check whether they correlate with volatility.
 
 ### Database Description
 
