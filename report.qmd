@@ -1,0 +1,792 @@
+---
+title: "JSC370 Final Project website"
+---
+
+## Info
+
+Github [repo](https://github.com/JustinZhaoOvO/JSC370Final)
+
+Project [website](https://justinzhaoovo.github.io/JSC370Final/)
+
+Author: Boquan Zhao
+
+
+## 1.Introduction
+
+### Background and Motivation
+
+Financial markets do not move at a constant pace. Sometimes market is relatively calm, and other times volatility spikes when uncertainty hits. A natural question is: what indicators are related to market volatility and can help us explain the changes in market volatility?
+
+One practical way to approach this is to look at a few market indicators that people often track. For example, the Implied volatility (VIX) index summarizes market expectations about future volatility, interest rates reflect broader macroeconomic conditions, and assets like gold or the U.S. Dollar Index are often considered as signals of market risk.
+
+This project will explore how these indicators are related to volatility of the S&P 500. Using data collected from public APIs, we combine market data(S&P 500, VIX, 10-year Treasury yield) with a small set of financial variables(gold and U.S. Dollar Index) and check whether they correlate with volatility.
+
+### Database Description
+
+The dataset used in this project combines data from two sources:
+
+- The [FRED API](https://fred.stlouisfed.org/docs/api/fred/), which provides financial and economic indicators (S&P 500, VIX, and 10-year Treasury yield)  
+- Yahoo Finance data accessed through the `yfinance` Python package  
+
+We study daily movements in the U.S. stock market using the S\&P 500 index. From its daily returns, we construct the outcome variable: `volatility`, which measures the rolling standard deviation of returns over a 7-day window, we call it realized volatility.
+
+This analysis considers several variables that may be associated with market volatility:
+
+- Implied volatility (VIX): it reflects how uncertain investors expect the market to be in the near future.
+- 10-year Treasury yield (rate): the interest rate on long-term U.S. government bonds, usually used as an indicator of overall economic conditions  
+- Gold price (gold): the gold price, often viewed as a safe asset during uncertain times
+- U.S. Dollar Index (DXY): measures the strength of the U.S. dollar relative to other major currencies, reflecting global demand for the dollar  
+- Weekday: the day of the week (Monday–Friday), used as a categorical predictor to capture any day-of-week effects on volatility
+
+All these variables are simultaneously observed and publicly available on the same trading day as the outcome variable `volatility`, and none of them are derived volatility, no future data is used, so there is no data leakage. But since the predictors are contemporaneous, so our analysis is not predicting future volatility and not studying any causal relationship, but studying how these variables are associated with changes in realized market volatility.
+
+
+### Research Questions
+
+Specifically, we focus on the following research questions:
+
+- How is implied volatility (VIX) associated with realized volatility?  
+- Is the 10-year Treasury yield (rate) related to changes in realized volatility?  
+- Do gold prices (gold) and the U.S. Dollar Index (DXY) provide additional meaningful information about realized volatility?
+- Do day-of-week effects exist in realized volatility?
+- Which predictors are most important in explaining variation in realized volatility?
+
+ 
+
+
+
+
+## 2. Methods
+
+### Data Cleaning
+
+We collected S&P 500 prices, VIX, the 10-year Treasury yield, gold prices, and the U.S. Dollar Index (DXY) from the FRED API and Yahoo Finance python package during the period of 2015-01-01 to 2025-12-31.
+
+Before merging anything, we made sure the date columns were in a consistent `Date` format and that each table was sorted in chronological order. This matters because rolling calculations and forward-filling only make sense when the rows are ordered by time.
+
+We then merged the other datasets onto the S&P 500 table using a left join, so the outcome variable S&P 500 trading dates are kept. After merging, the final dataset has 2765 observations, which matches the number of rows in the S&P 500 data.
+
+After the merge, we checked where values were missing. There are 20 missing values in the 10-year Treasury yield data, 3 missing values in the gold price data, and 2 missing values in the U.S. Dollar Index data.
+
+We used forward-filling (`ffill`) to handle the missing values in the 10-year Treasury yield data because it tends to move more smoothly and does not change frequently or dramatically, so using the last observed value is a reasonable approximation for short gaps.
+
+We dropped rows where these variables were missing since these market-driven data may have significant fluctuations, so forward-fill may not be a good approximation.
+
+After handling missing values, there are 2762 observations in the final dataset.
+
+We then created a new column `weekday` by extracting the day of the week from the `date` column, and also constructed the outcome variable:
+
+$$
+\mathrm{volatility}_t
+=
+\mathrm{std}(r_{t-6}, \ldots, r_t)
+$$
+
+where $r_t$ is the daily return of the S&P 500. This is a 7-day rolling standard deviation, reflecting short-term volatility. Since it uses lagged returns, the first 7 observations do not have a defined value and are removed. Eventually, there are 2755 observations left.
+
+
+### Data Exploration
+
+We used the following exploratory methods:
+
+- Time series plots of S&P 500, VIX, 10-year Treasury yield, gold, DXY, and volatility to see how data moves over time.
+- Histograms of volatility before and after a log transform. Volatility is right-skewed, so we add a column `log_volatility` by taking log of volatility.
+- Scatter plots of each predictor (VIX, rate, gold, DXY) against `log_volatility` with a linear trend line.
+- Boxplots of `log_volatility` by weekday (Monday–Friday) to check whether volatility varies across days of the week'
+- Pairwise t-tests heatmap to assess whether differences in log-volatility across weekdays are statistically significant.
+- Correlation heatmap of `log_volatility` and the predictors.
+
+
+### Model Fitting
+
+We fitted the following models:
+
+- OLS Linear regression
+- Random Forest
+- XGBoost
+
+
+#### Model Description
+
+We use the OLS regression as a simple baseline model, it assumes a linear relationship between the predictors and the log-volatility, and simply estimates the line that minimizes the sum of squared errors between the predicted and log-volatility.
+
+We also use two non-linear, tree-based models, Random Forest and XGBoost, to capture potential nonlinear relationships. 
+
+The Random Forest model builds multiple decision trees and take the average of the predictions to reduce the variance.
+
+The XGBoost model use gradient boosting to build a sequence of decision trees and sum up the predictions to get the final result.
+
+#### Hyperparameters
+
+OLS regression model has no hyperparameters to tune.
+
+For Random Forest model, we grid search the following hyperparameter combinations:
+
+- Number of trees (`n_estimators`) [200, 400, 600]
+- Maximum tree depth (`max_depth`) [5, 15, 30]
+- Minimum samples to split a node (`min_samples_split`) [2, 5, 10]
+
+There are 27 combinations of hyperparameters for Random Forest model.
+
+For XGBoost model, we grid search the following hyperparameter combinations:
+
+- Number of trees (`n_estimators`) [200, 400, 600]
+- Maximum tree depth (`max_depth`) [5, 15, 30]
+- Learning rate [0.01, 0.05, 0.1]
+- Subsample ratio [0.5, 0.8, 1.0]
+
+There are 81 combinations of hyperparameters for XGBoost model.
+
+#### Training and Testing
+
+Since the data is time-series data, so we sort the data by date first and then split the data into 80% training and 20% testing sets using 80% quantile of date. Also, when grid searching the hyperparameters, we use time-series 5-foldcross-validation `cv=TimeSeriesSplit(n_splits=5)` to avoid data leakage.
+
+#### Evaluation Metrics
+
+Since the outcome variable is continuous, we use the following metrics to evaluate the model performance for all three models:
+
+- R^2: proportion of variance in the `log_volatility` that is explained by the predictors.
+- RMSE: root mean squared error of the predicted `log_volatility` and the true `log_volatility`, penalized for larger errors.
+- MAE: mean absolute error of the predicted `log_volatility` and the true `log_volatility`.
+
+
+
+## 3. Results
+
+```{python}
+#| label: setup
+#| include: false
+
+import warnings
+warnings.filterwarnings("ignore")
+
+from pathlib import Path
+import os
+import requests
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from tabulate import tabulate
+from IPython.display import Markdown
+import matplotlib.ticker as mticker
+from scipy import stats
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
+from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
+from xgboost import XGBRegressor
+import yfinance as yf
+from dotenv import load_dotenv
+load_dotenv()
+
+START_DATE = "2015-01-01"
+END_DATE = "2025-12-31"
+API_KEY = os.getenv("FRED_API_KEY")
+
+def fred_download(series_id, start_date=START_DATE, end_date=END_DATE):
+    url = "https://api.stlouisfed.org/fred/series/observations"
+    params = {
+        "series_id": series_id,
+        "api_key": API_KEY,
+        "file_type": "json",
+        "observation_start": start_date,
+        "observation_end": end_date
+    }
+    r = requests.get(url, params=params, timeout=30)
+    r.raise_for_status()
+    data = r.json()["observations"]
+    df = pd.DataFrame(data)[["date", "value"]]
+    df["date"] = pd.to_datetime(df["date"])
+    df["value"] = pd.to_numeric(df["value"], errors="coerce")
+    return df
+
+def yf_download(ticker, start_date=START_DATE, end_date=END_DATE):
+    df = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False, progress=False)
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+    df = df.reset_index()[["Date", "Close"]]
+    df["Date"] = pd.to_datetime(df["Date"])
+    return df
+
+def load_or_download_csv(path, loader):
+    path = Path(path)
+    if path.exists():
+        return pd.read_csv(path)
+    df = loader()
+    df.to_csv(path, index=False)
+    return df
+
+def standardize_columns(df, date_col, value_col, new_value_name):
+    out = df.copy()
+    out[date_col] = pd.to_datetime(out[date_col])
+    out[value_col] = pd.to_numeric(out[value_col], errors="coerce")
+    out = out.rename(columns={date_col: "date", value_col: new_value_name})
+    out = out[["date", new_value_name]].sort_values("date")
+    return out
+```
+
+```{python}
+#| label: load-data
+#| include: false
+
+sp500_raw = load_or_download_csv("data/sp500.csv", lambda: yf_download("^GSPC"))
+vix_raw = load_or_download_csv("data/vix.csv", lambda: yf_download("^VIX"))
+gold_raw = load_or_download_csv("data/gold.csv", lambda: yf_download("GC=F"))
+dxy_raw = load_or_download_csv("data/dxy.csv", lambda: yf_download("DX-Y.NYB"))
+rate_raw = load_or_download_csv("data/dgs10.csv", lambda: fred_download("DGS10"))
+```
+
+```{python}
+#| label: standardize-data
+#| include: false
+
+sp500 = standardize_columns(sp500_raw, "Date", "Close", "sp500_close")
+vix = standardize_columns(vix_raw, "Date", "Close", "vix")
+gold = standardize_columns(gold_raw, "Date", "Close", "gold")
+dxy = standardize_columns(dxy_raw, "Date", "Close", "dxy")
+rate = standardize_columns(rate_raw, "date", "value", "rate")
+
+
+display(sp500.shape)
+```
+
+```{python}
+#| label: merge-data
+#| include: false
+
+df_merged = sp500.merge(vix, on="date", how="left")
+df_merged = df_merged.merge(rate, on="date", how="left")
+df_merged = df_merged.merge(gold, on="date", how="left")
+df_merged = df_merged.merge(dxy, on="date", how="left")
+df_merged = df_merged.sort_values("date").reset_index(drop=True)
+```
+
+```{python}
+#| label: missing-before
+#| include: false
+
+display(df_merged.isnull().sum())
+display(df_merged.shape)
+```
+
+```{python}
+#| label: cleaning-missing-values
+#| include: false
+
+df_filled = df_merged.copy()
+df_filled["rate"] = df_filled["rate"].ffill()
+df_clean = df_filled.dropna(subset=["gold", "dxy"]).sort_values("date").reset_index(drop=True)
+```
+
+```{python}
+#| label: missing-after
+#| include: false
+
+display(df_clean.isnull().sum())
+display(df_clean.shape)
+```
+
+```{python}
+#| label: construct-outcome
+#| include: false
+
+df_clean["return"] = df_clean["sp500_close"].pct_change()
+df_clean["volatility"] = df_clean["return"].rolling(7).std()
+df_clean["log_volatility"] = np.log(df_clean["volatility"])
+
+analysis_df = df_clean.dropna(subset=["return", "volatility", "log_volatility"]).reset_index(drop=True)
+analysis_df["weekday"] = analysis_df["date"].dt.day_name()
+display(analysis_df.shape)
+```
+
+### Data Exploration
+
+```{python}
+#| label: fig-interactive-timeseries-plot
+#| echo: false
+#| fig-cap: "Time series plots of the S&P 500, predictors and volatility"
+#| fig-align: center
+#| fig-pos: H
+
+series_info = [
+    ("sp500_close", "S&P 500 close Price"),
+    ("vix", "Implied Volatility(VIX)"),
+    ("rate", "10-year Treasury Yield (rate)"),
+    ("gold", "Gold Price (gold)"),
+    ("dxy", "U.S. Dollar Index (DXY)"),
+    ("volatility", "7-day window realized volatility (volatility)"),
+    ("log_volatility", "Log of volatility (log_volatility)")
+]
+
+fig, axes = plt.subplots(4, 2, figsize=(13, 14), sharex=False)
+axes = axes.flatten()
+
+for i, (col, title) in enumerate(series_info):
+    axes[i].plot(analysis_df["date"], analysis_df[col], linewidth=0.7, color="steelblue")
+    axes[i].set_title(title, fontsize=10)
+    axes[i].set_xlabel("Date", fontsize=8)
+    axes[i].tick_params(axis="x", rotation=25, labelsize=7)
+    axes[i].tick_params(axis="y", labelsize=8)
+
+
+axes[-1].set_visible(False)
+
+plt.suptitle("Time Series of S&P 500, Predictors and Volatility", fontsize=12, y=1.01)
+plt.tight_layout()
+plt.show()
+```
+
+[View interactive time series plot](https://justinzhaoovo.github.io/JSC370Final/results.html#fig-interactive-timeseries-plot)
+
+This time series plot @fig-interactive-timeseries-plot shows that the S&P 500, all predictors, volatility and log-volatility over time. We can use the dropdown menu to switch between the plots. 
+
+We can see that S&P 500 and Gold has similar patterns, 
+VIX and 7-day window realized volatility has similar patterns, also 10-year Treasury Yield and U.S. Dollar Index(DXY) has similar patterns.
+
+```{python}
+#| label: fig-volatility-distribution
+#| echo: false
+#| fig-cap: "Distribution of realized volatility before and after log transformation"
+#| fig-align: center
+#| fig-pos: H
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+axes[0].hist(analysis_df["volatility"], bins=40)
+axes[0].set_title("Volatility")
+axes[0].set_xlabel("volatility")
+axes[0].set_ylabel("Count")
+
+axes[1].hist(analysis_df["log_volatility"], bins=40)
+axes[1].set_title("Log Volatility")
+axes[1].set_xlabel("log(volatility)")
+axes[1].set_ylabel("Count")
+
+plt.tight_layout()
+plt.show()
+```
+
+This hitogram plots @fig-volatility-distribution show the distribution of volatility and log-volatility. The volatility is right-skewed, and log-volatility is more symmetric and hence better for modeling OLS linear regression.
+
+```{python}
+#| label: fig-interactive-scatter-predictors
+#| echo: false
+#| fig-cap: "Scatter plots of each predictor vs. log-volatility"
+#| fig-align: center
+#| fig-pos: H
+
+feature_cols_eda = ["vix", "rate", "gold", "dxy"]
+feature_labels = ["Implied Volatility(VIX)", "10-year Treasury Yield(rate)", "Gold", "U.S. Dollar Index(DXY)"]
+
+fig, axes = plt.subplots(2, 2, figsize=(11, 8))
+
+for ax, col, label in zip(axes.flatten(), feature_cols_eda, feature_labels):
+    x = analysis_df[col]
+    y = analysis_df["log_volatility"]
+    mask = x.notna() & y.notna()
+    ax.scatter(x[mask], y[mask], alpha=0.25, s=5, color="steelblue")
+    # Fit and draw OLS trend line
+    m, b = np.polyfit(x[mask], y[mask], 1)
+    x_line = np.linspace(x[mask].min(), x[mask].max(), 200)
+    ax.plot(x_line, m * x_line + b, color="red", linewidth=1.5)
+    ax.set_xlabel(label, fontsize=9)
+    ax.set_ylabel("log(volatility)", fontsize=9)
+    ax.set_title(f"{label} vs. log-volatility", fontsize=10)
+
+plt.suptitle("Scatter Plots of Predictors vs. Log-Volatility", fontsize=12)
+plt.tight_layout()
+plt.show()
+```
+
+[View interactive scatterplot](https://justinzhaoovo.github.io/JSC370Final/results.html#fig-interactive-scatter-predictors)
+
+This scatter plot @fig-interactive-scatter-predictors shows the relationship between each predictor and log-volatility. 
+
+VIX and log-volatility seem to have a positive relationship, most of the points are centered around the trend line. The Gold and rate do not have a clear relationship with log-volatility, the points are scattered everywhere, no clear pattern or a steep trend line. The trend line of DXY is slightly positive, but the data points are not very concentrated around the trend line.
+
+So VIX has a strong positive linear relationship with log-volatility, while the other predictors do not show a clear linear relationship with the outcome.
+
+```{python}
+#| label: fig-weekday-boxplot
+#| echo: false
+#| fig-cap: "Distribution of log-volatility by weekday (Monday to Friday)"
+#| fig-align: center
+#| fig-pos: H
+
+day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+data = [
+    analysis_df.loc[analysis_df["weekday"] == day, "log_volatility"].dropna().values
+    for day in day_order
+]
+
+fig, ax = plt.subplots(figsize=(8, 5))
+bp = ax.boxplot(
+    data, labels=day_order, patch_artist=True,
+    flierprops=dict(marker=".", markersize=3, alpha=0.4, color="gray")
+)
+for patch in bp["boxes"]:
+    patch.set_facecolor("lightsteelblue")
+
+ax.set_xlabel("Weekday", fontsize=10)
+ax.set_ylabel("log(volatility)", fontsize=10)
+ax.set_title("Log-Volatility by Weekday", fontsize=11)
+plt.tight_layout()
+plt.show()
+```
+
+[View interactive boxplot](https://justinzhaoovo.github.io/JSC370Final/results.html#fig-weekday-boxplot)
+
+The boxplot @fig-weekday-boxplot shows the distribution of log-volatility by weekday. There is no a significant differnce in log-volatility distributionacross weekdays, the means are all around -5, and spreads are also similar.
+
+```{python}
+#| label: fig-weekday-ttest
+#| echo: false
+#| fig-cap: "Pairwise t-test p-values for log-volatility across weekdays. Darker cells indicate smaller p-values."
+#| fig-align: center
+#| fig-pos: H
+
+n = len(day_order)
+p_matrix = np.full((n, n), np.nan)
+
+for i, d1 in enumerate(day_order):
+    for j, d2 in enumerate(day_order):
+        if i != j:
+            g1 = analysis_df.loc[analysis_df["weekday"] == d1, "log_volatility"]
+            g2 = analysis_df.loc[analysis_df["weekday"] == d2, "log_volatility"]
+            _, p = stats.ttest_ind(g1, g2)
+            p_matrix[i, j] = round(p, 4)
+
+masked = np.ma.array(p_matrix, mask=np.isnan(p_matrix))
+
+fig, ax = plt.subplots(figsize=(7, 5))
+cmap = plt.cm.RdYlGn_r
+im = ax.imshow(masked, aspect="auto", vmin=0, vmax=1, cmap=cmap)
+
+ax.set_xticks(range(n))
+ax.set_yticks(range(n))
+ax.set_xticklabels(day_order, rotation=20, ha="right", fontsize=9)
+ax.set_yticklabels(day_order, fontsize=9)
+
+for i in range(n):
+    for j in range(n):
+        if i != j:
+            ax.text(j, i, f"{p_matrix[i, j]:.3f}",
+                    ha="center", va="center", fontsize=9)
+
+plt.colorbar(im, ax=ax, label="p-value")
+ax.set_title("Pairwise t-test p-values: log-volatility across weekdays", fontsize=11)
+plt.tight_layout()
+plt.show()
+```
+
+[View interactive pairwise t-test](https://justinzhaoovo.github.io/JSC370Final/results.html#fig-weekday-ttest)
+
+The pairwise t-ttest results @fig-weekday-ttest further confirms the observation from the boxplot. All the p-values are substantially greater than 0.05, so we cannot say there are significant differences in log-volatility across weekdays.
+
+```{python}
+#| label: fig-correlation-heatmap
+#| echo: false
+#| fig-cap: "Correlation heatmap for the outcome and explanatory variables"
+#| fig-align: center
+#| fig-pos: H
+
+corr_vars = ["log_volatility", "vix", "rate", "gold", "dxy"]
+corr_table = analysis_df[corr_vars].corr()
+
+plt.figure(figsize=(7, 6))
+plt.imshow(corr_table, aspect="auto", vmin=-1, vmax=1)
+plt.xticks(range(len(corr_table.columns)), corr_table.columns, rotation=45, ha="right")
+plt.yticks(range(len(corr_table.index)), corr_table.index)
+for i in range(len(corr_table.index)):
+    for j in range(len(corr_table.columns)):
+        plt.text(j, i, f"{corr_table.iloc[i, j]:.2f}", ha="center", va="center", fontsize=9)
+plt.colorbar()
+plt.title("Correlation Matrix")
+plt.tight_layout()
+plt.show()
+```
+
+The correlation heatmap @fig-correlation-heatmap shows the correlation between the numeric variables and log-volatility. It also confirms the observations from the scatter plots. VIX and log-volatility have a strong positive correlation (0.76), and dxy has a small positive correlation (0.19), while the other two predictors, rate and gold, do not show a significant correlation with log-volatility.
+
+### Model Fitting
+
+```{python}
+#| label: model-data
+#| include: false
+
+base_feature_cols = ["vix", "rate", "gold", "dxy"]
+target_col = "log_volatility"
+
+model_df = analysis_df[["date"] + base_feature_cols + ["weekday", target_col]].copy()
+
+
+weekday_dummies = pd.get_dummies(model_df["weekday"], prefix="weekday", drop_first=False)
+weekday_dummies = weekday_dummies.drop(columns=["weekday_Monday"])
+model_df = pd.concat([model_df, weekday_dummies], axis=1)
+
+feature_cols = base_feature_cols + list(weekday_dummies.columns)
+
+train_size = int(len(model_df) * 0.8)
+
+train_df = model_df.iloc[:train_size].copy()
+test_df = model_df.iloc[train_size:].copy()
+
+X_train = train_df[feature_cols]
+y_train = train_df[target_col]
+X_test = test_df[feature_cols]
+y_test = test_df[target_col]
+```
+
+```{python}
+#| label: fit-ols
+#| include: false
+
+ols_model = LinearRegression()
+ols_model.fit(X_train, y_train)
+```
+
+```{python}
+#| label: fit-rf
+#| include: false
+
+rf_search = GridSearchCV(
+    estimator=RandomForestRegressor(random_state=370, n_jobs=-1),
+    param_grid={
+        "n_estimators": [200, 400, 600],
+        "max_depth": [5, 15, 30],
+        "min_samples_split": [2, 5, 10]
+    },
+    scoring="neg_root_mean_squared_error",
+    cv=TimeSeriesSplit(n_splits=5),
+    n_jobs=1
+)
+
+rf_search.fit(X_train, y_train)
+best_rf = rf_search.best_estimator_
+```
+
+```{python}
+#| label: fit-xgb
+#| include: false
+
+xgb_search = GridSearchCV(
+    estimator=XGBRegressor(objective="reg:squarederror", random_state=370, n_jobs=-1),
+    param_grid={
+        "n_estimators": [200, 400, 600],
+        "max_depth": [5, 15, 30],
+        "learning_rate": [0.01, 0.05, 0.1],
+        "subsample": [0.5, 0.8, 1.0]
+    },
+    scoring="neg_root_mean_squared_error",
+    cv=TimeSeriesSplit(n_splits=5),
+    n_jobs=1
+)
+
+xgb_search.fit(X_train, y_train)
+best_xgb = xgb_search.best_estimator_
+```
+
+```{python}
+#| label: evaluation
+#| include: false
+
+def evaluate_model(name, fitted_model, X_test, y_test):
+    pred = fitted_model.predict(X_test)
+    return pd.DataFrame({
+        "model": [name],
+        "rmse": [root_mean_squared_error(y_test, pred)],
+        "mae": [mean_absolute_error(y_test, pred)],
+        "r2": [r2_score(y_test, pred)]
+    })
+
+results = pd.concat([
+    evaluate_model("OLS", ols_model, X_test, y_test),
+    evaluate_model("Random Forest", best_rf, X_test, y_test),
+    evaluate_model("XGBoost", best_xgb, X_test, y_test)
+], ignore_index=True)
+```
+
+
+We will fit three models: OLS, Random Forest and XGBoost.
+
+By grid searching the hyperparameters, we found the best hyperparameters for each model as follows:
+```{python}
+#| label: tbl-hyperparameter-table
+#| echo: false
+#| tbl-cap: "Hyperparameters for each model"
+#| tbl-align: center
+
+hyperparameter_summary = pd.DataFrame({
+    "Model": ["OLS", "Random Forest", "XGBoost"],
+    "n_estimators": ["—", rf_search.best_params_["n_estimators"], xgb_search.best_params_["n_estimators"]],
+    "max_depth": ["—", rf_search.best_params_["max_depth"], xgb_search.best_params_["max_depth"]],
+    "min_samples_split": ["—", rf_search.best_params_["min_samples_split"], "—"],
+    "learning_rate": ["—", "—", xgb_search.best_params_["learning_rate"]],
+    "subsample": ["—", "—", xgb_search.best_params_["subsample"]]
+})
+
+display(hyperparameter_summary)
+```
+
+The model performance with the best hyperparameters @tbl-hyperparameter-table on test setis as follows:
+
+```{python}
+#| label: tbl-model-performance
+#| echo: false
+#| tbl-cap: "Model performance on test set"
+#| tbl-align: center
+
+results_table = results.sort_values("rmse").copy()
+results_table["rmse"] = results_table["rmse"].round(3)
+results_table["mae"] = results_table["mae"].round(3)
+results_table["r2"] = results_table["r2"].round(3)
+results_table = results_table.rename(columns={
+    "model": "Model",
+    "rmse": "RMSE",
+    "mae": "MAE",
+    "r2": "R2"
+}).reset_index(drop=True)
+
+display(results_table)
+```
+
+The table @tbl-model-performance shows that OLS has the smaller RMSE(0.369) and MAE(0.298), and higher R2(0.434) compared to other two non-linear models. This sugguests that the relationship between the predictors and log-volatility is largely linear, and there is limited nonlinear structure to exploit in the data set, so more flexible,non-linear models do not provide much improvement.
+
+Comparing the XGBoost and Random Forest models, the XGBoost model has a slightly lower RMSE(0.384) and MAE(0.309), and higher R2(0.388) and hence a better performance than the Random Forest model. 
+
+Worth noting, the R2 for all three models are relatively low, indicating that a substantial portion of volatility variation remains unexplained by the predictors due to the complexity of financial market and the limited predictors we used. 
+
+
+```{python}
+#| label: tbl-ols-coefficients
+#| echo: false
+#| tbl-cap: "Summary for OLS model"
+#| tbl-align: center
+
+X_arr = X_train.values.astype(float)   # ensure float64; bool dummy cols cause dtype('O') otherwise
+y_arr = y_train.values.astype(float)
+n_obs, n_feat = X_arr.shape
+
+# Use coefficients directly from the fitted model
+beta = np.concatenate([[ols_model.intercept_], ols_model.coef_])
+
+# Compute SEs from residuals of the fitted model
+X_aug = np.column_stack([np.ones(n_obs), X_arr])
+residuals = y_arr - ols_model.predict(X_train)
+sigma2 = np.sum(residuals ** 2) / (n_obs - n_feat - 1)
+se_all = np.sqrt(sigma2 * np.diag(np.linalg.inv(X_aug.T @ X_aug)))
+
+t_stats = beta / se_all
+p_values = 2 * stats.t.sf(np.abs(t_stats), df=n_obs - n_feat - 1)
+
+coef_df = pd.DataFrame({
+    "Feature": ["(Intercept)"] + feature_cols,
+    "Coefficient": beta.round(4),
+    "Std. Error": se_all.round(4),
+    "t-statistic": t_stats.round(4),
+    "p-value": p_values.round(4),
+    "Sig.": ["***" if p < 0.001 else "**" if p < 0.01 else "*" if p < 0.05 else "" for p in p_values]
+}).reset_index(drop=True)
+
+display(coef_df)
+```
+
+The summary of the OLS model @tbl-ols-coefficients indicates that VIX is the most siginificant predictor, and has a positive relationship with log-volatility, since its t-statistic is the largest(50.57). Beside that, rate and gold are also statistically significant in 0.05 level, rate has a positive relationship and gold has a negative relationship with log-volatility. Other predictors, dxy and weekday dummies, are not significant, so the US dollar index has a limited explanatory power for log-volatility and there is no enough evidence of day-of-week effects in log-volatility.
+
+
+```{python}
+#| label: fig-feature-importance
+#| echo: false
+#| fig-cap: "Feature importances for Random Forest and XGBoost"
+#| fig-align: center
+#| fig-pos: H
+
+rf_importance = pd.DataFrame({
+    "feature": feature_cols,
+    "importance": best_rf.feature_importances_
+}).sort_values("importance", ascending=True)
+
+xgb_importance = pd.DataFrame({
+    "feature": feature_cols,
+    "importance": best_xgb.feature_importances_
+}).sort_values("importance", ascending=True)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+ax1.barh(rf_importance["feature"], rf_importance["importance"], color="steelblue")
+ax1.set_xlabel("Importance", fontsize=9)
+ax1.set_title("Random Forest", fontsize=11)
+for bar, val in zip(ax1.patches, rf_importance["importance"]):
+    ax1.text(bar.get_width() + 0.002, bar.get_y() + bar.get_height() / 2,
+             f"{val:.4f}", va="center", fontsize=8)
+
+ax2.barh(xgb_importance["feature"], xgb_importance["importance"], color="darkorange")
+ax2.set_xlabel("Importance", fontsize=9)
+ax2.set_title("XGBoost", fontsize=11)
+for bar, val in zip(ax2.patches, xgb_importance["importance"]):
+    ax2.text(bar.get_width() + 0.002, bar.get_y() + bar.get_height() / 2,
+             f"{val:.4f}", va="center", fontsize=8)
+
+plt.suptitle("Feature Importances: Random Forest vs. XGBoost", fontsize=12)
+plt.tight_layout()
+plt.show()
+```
+
+[View interactive feature importances plot](https://justinzhaoovo.github.io/JSC370Final/results.html#fig-feature-importance)
+
+The feature importances ranking for both Random Forest and XGBoost models @fig-feature-importance are same. VIX is the dominant predictor for both models, followed by rate, dxy, and gold, and the weekday dummies are less important.
+
+Furthermore, the Random Forest model put more weight on vix, the importance reaches 0.8794, while the XGBoost model put more weight on rate, the importance reaches 0.3222. This suggests that the Random Forest model is more sensitive to the changes in vix, while the importance of VIX in XGBoost model is 0.6299, slightly lower than the Random Forest model and weighted more on rest of the predictors.
+
+
+## 4. Conclusion and Summary
+
+### Conclusion
+
+In this project, we used daily data from 2015 to 2025 to study how few financial variables are related to realized volatility of the S&P 500. We constructed a 7-day rolling standard deviation of returns as the outcome, log-transformed it to avoid right-skewness, and fit three models: OLS, Random Forest, and XGBoost.
+
+Now we can answer the research questions proposed at the beginning:
+
+1. How is implied volatility (VIX) associated with realized volatility?
+
+VIX has the strongest association with realized log-volatility among all predictors. The correlation between VIX and log-volatility is around 0.76, and the OLS coefficient for VIX is positive and highly significant (p < 0.001). Both Random Forest and XGBoost also rank VIX as the most important feature with dominant importance. This makes sense since VIX reflects how uncertain investors expect the market to be in the near future, so higher VIX tends to correlate with higher realized log-volatility.
+
+2. Is the 10-year Treasury yield (rate) related to changes in realized volatility?
+
+The 10-year Treasury yield has a weaker positive association with realized log-volatility compared to VIX. The OLS coefficient is also statistically significant and the t-statistic is 9.86, smaller than 50.57 for VIX. In term of feature importance, rate ranks second important for XGBoost and Random Forest, sepcifically, 0.0614 importance for Random Forest and 0.0973 importance for XGBoost. So rate is positively related to realized log-volatility, sugguesting that higher interest rates may be associated with increased market volatility.
+
+3. Do gold prices and the U.S. Dollar Index (DXY) provide additional meaningful information about realized volatility?
+
+Gold is significantly negatively related to realized log-volatility in the OLS model, with a p-value < 0.0001 and coefficient of -0.0001, and the U.S. Dollar Index (DXY) is not significant in the OLS model. Whereas, in the feature importance ranking for both Random Forest and XGBoost, gold is ranked fourth and dxy is ranked third. This sugguests that gold has a significant but very small linear effect on log-volatility, which means as gold price increases, log-volatility decreases slightly. In contrast, dxy is not significant in the OLS model but has a higher importance in Random Forest and XGBoost models, suggesting that dxy may capture some weak, non-linear pattern that are not captured by the linear regression model, but the importance is quite low and may not be meaningful.
+
+In conclusion, gold prices provide some tiny additional negative signal about realized log-volatility, and the U.S. Dollar Index (DXY) does not have a statisitcally siginificant linear relationship with log-volatility or a relatively high importance, so it does not provide substantial exploanation for realized log-volatility.
+
+4. Do day-of-week effects exist in realized volatility?
+
+No. The boxplot shows very similar distributions of log-volatility across Monday to Friday, with means all around -5 and similar spreads. The pairwise t-tests also confirm this, all pairs of weekdays do not show a significant difference (all p-values > 0.05). So weekday is not a useful predictor in practice.
+
+5. Which predictors are most important in explaining variation in realized volatility?
+
+VIX is the most important predictor across all three models, it has the highest t-statistic in the OLS model and the highest importance in both Random Forest and XGBoost models. Rate is second, followed by DXY and gold, and the weekday dummies have the lowest importance.
+
+
+
+### Summary of Findings
+
+Overall, the results suggest that log-volatility is primarily associated with VIX, with some weak positive relationship with US 10-year Treasury Yield and weak negative relationship with gold prices. The U.S. Dollar Index (DXY) and weekday provide very limited information about realized log-volatility.
+
+Comparing the performance of the three models, OLS has the best performance on the test set, sugguesting that the relationship between the predictors and log-volatility is largely linear, more complex models do not provide much improvement.
+
+However, worth noting, the R2 for all three models are relatively low, indicating that a substantial portion of volatility variation remains unexplained by the selected predictors, and we may need to consider more relevant predictors to better explain the realized log-volatility.
+
+### Limitations
+
+- The models are using contemporaneous predictors to model the log-volatility on the same day, rather than strictly predicting the future volatility, so the model should be interpreted as explantory rather than predictive. They can capture the relationships between the predictors and log-volatility from models, but predictive ability is limited.
+
+- We only used four continuous predictors plus weekday. Many other potentially useful variables are not included, financial market are influenced by many other factors, which are not captured by the selected predictors.
+
+- The predictors we used are mainly financial metrics of U.S. market, so it may not be generalizable to global market.
+
+- The analysis is based on log-volatility, so the interpretation of the results can not be directly applied to volatility.
+
+- The data is time-series data and the models are not time-series models, which may limit their ability to capture the dynamic patterns over time.

@@ -1,0 +1,40 @@
+---
+title: "JSC370 Final Project website"
+---
+
+Author: Boquan Zhao
+
+## Introduction to this Project
+
+This project explores how a set of financial and macro indicators (implied volatility (VIX), the 10-year Treasury yield, gold prices, and the U.S. Dollar Index (DXY)) are associated with realized volatility of the S&P 500, using daily data from 2015 to 2025.
+
+We construct a 7-day rolling standard deviation of S&P 500 returns as the outcome variable `realized volatility` and compare three predictive models: OLS linear regression, Random Forest, and XGBoost.
+
+### Research Questions
+
+- How is implied volatility (VIX) associated with realized volatility?
+- Is the 10-year Treasury yield (rate) related to changes in realized volatility?
+- Do gold prices and the U.S. Dollar Index (DXY) provide additional meaningful information about realized volatility?
+- Do day-of-week effects exist in realized volatility?
+- Which predictors are most important in explaining variation in realized volatility?
+
+## Key Findings
+
+- VIX is the strongest predictor of realized volatility, with a correlation of ~0.76 and the highest feature importance across all models.
+- Rate and gold contribute limited additional predictive power beyond VIX.
+- DXY does not have a significant relationship with realized volatility.
+- No significant day-of-week effect on realized volatility was found.
+- OLS outperforms both tree-based models (RMSE = 0.369, R² = 0.434), suggesting the relationship between the predictors and log-volatility is largely linear.
+
+## Explore the Analysis
+
+Use the navigation bar above to explore each section of the report:
+
+- [Introduction](introduction.qmd)
+- [Methods](methods.qmd)
+- [Results](results.qmd)
+- [Conclusion and Summary](conclusion.qmd)
+
+## Download the Report
+
+[Download the PDF report](report.pdf)

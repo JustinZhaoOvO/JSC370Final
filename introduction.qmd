@@ -1,0 +1,42 @@
+---
+title: "Introduction"
+---
+
+## 1.Introduction
+
+### Background and Motivation
+
+Financial markets do not move at a constant pace. Sometimes market is relatively calm, and other times volatility spikes when uncertainty hits. A natural question is: what indicators are related to market volatility and can help us explain the changes in market volatility?
+
+One practical way to approach this is to look at a few market indicators that people often track. For example, the Implied volatility (VIX) index summarizes market expectations about future volatility, interest rates reflect broader macroeconomic conditions, and assets like gold or the U.S. Dollar Index are often considered as signals of market risk.
+
+This project will explore how these indicators are related to volatility of the S&P 500. Using data collected from public APIs, we combine market data(S&P 500, VIX, 10-year Treasury yield) with a small set of financial variables(gold and U.S. Dollar Index) and check whether they correlate with volatility.
+
+### Database Description
+
+The dataset used in this project combines data from two sources:
+
+- The [FRED API](https://fred.stlouisfed.org/docs/api/fred/), which provides financial and economic indicators (S&P 500, VIX, and 10-year Treasury yield)  
+- Yahoo Finance data accessed through the `yfinance` Python package  
+
+We study daily movements in the U.S. stock market using the S\&P 500 index. From its daily returns, we construct the outcome variable: `volatility`, which measures the rolling standard deviation of returns over a 7-day window, we call it realized volatility.
+
+This analysis considers several variables that may be associated with market volatility:
+
+- Implied volatility (VIX): it reflects how uncertain investors expect the market to be in the near future.
+- 10-year Treasury yield (rate): the interest rate on long-term U.S. government bonds, usually used as an indicator of overall economic conditions  
+- Gold price (gold): the gold price, often viewed as a safe asset during uncertain times
+- U.S. Dollar Index (DXY): measures the strength of the U.S. dollar relative to other major currencies, reflecting global demand for the dollar  
+- Weekday: the day of the week (Monday–Friday), used as a categorical predictor to capture any day-of-week effects on volatility
+
+All these variables are simultaneously observed and publicly available on the same trading day as the outcome variable `volatility`, and none of them are derived volatility, no future data is used, so there is no data leakage. But since the predictors are contemporaneous, so our analysis is not predicting future volatility and not studying any causal relationship, but studying how these variables are associated with changes in realized market volatility.
+
+### Research Questions
+
+Specifically, we focus on the following research questions:
+
+- How is implied volatility (VIX) associated with realized volatility?  
+- Is the 10-year Treasury yield (rate) related to changes in realized volatility?  
+- Do gold prices (gold) and the U.S. Dollar Index (DXY) provide additional meaningful information about realized volatility?
+- Do day-of-week effects exist in realized volatility?
+- Which predictors are most important in explaining variation in realized volatility?

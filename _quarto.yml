@@ -1,0 +1,31 @@
+project:
+  type: website
+  output-dir: docs
+  render:
+    - "*.qmd"
+    - "!report.qmd"
+
+
+website:
+  title: "JSC370 Final Project"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: introduction.qmd
+        text: Introduction
+      - href: methods.qmd
+        text: Methods
+      - href: results.qmd
+        text: Results
+      - href: conclusion.qmd
+        text: Conclusion and Summary
+  page-footer:
+    center: "Copyright &copy; 2026 Boquan Zhao"
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    embed-resources: false
+    css: styles.css

@@ -1,0 +1,95 @@
+---
+title: "Methods"
+---
+
+## 2. Methods
+
+### Data Cleaning
+
+We collected S&P 500 prices, VIX, the 10-year Treasury yield, gold prices, and the U.S. Dollar Index (DXY) from the FRED API and Yahoo Finance python package during the period of 2015-01-01 to 2025-12-31.
+
+Before merging anything, we made sure the date columns were in a consistent `Date` format and that each table was sorted in chronological order. This matters because rolling calculations and forward-filling only make sense when the rows are ordered by time.
+
+We then merged the other datasets onto the S&P 500 table using a left join, so the outcome variable S&P 500 trading dates are kept. After merging, the final dataset has 2765 observations, which matches the number of rows in the S&P 500 data.
+
+After the merge, we checked where values were missing. There are 20 missing values in the 10-year Treasury yield data, 3 missing values in the gold price data, and 2 missing values in the U.S. Dollar Index data.
+
+We used forward-filling (`ffill`) to handle the missing values in the 10-year Treasury yield data because it tends to move more smoothly and does not change frequently or dramatically, so using the last observed value is a reasonable approximation for short gaps.
+
+We dropped rows where these variables were missing since these market-driven data may have significant fluctuations, so forward-fill may not be a good approximation.
+
+After handling missing values, there are 2762 observations in the final dataset.
+
+We then created a new column `weekday` by extracting the day of the week from the `date` column, and also constructed the outcome variable:
+
+$$
+\mathrm{volatility}_t
+=
+\mathrm{std}(r_{t-6}, \ldots, r_t)
+$$
+
+where $r_t$ is the daily return of the S&P 500. This is a 7-day rolling standard deviation, reflecting short-term volatility. Since it uses lagged returns, the first 7 observations do not have a defined value and are removed. Eventually, there are 2755 observations left.
+
+
+### Data Exploration
+
+We used the following exploratory methods:
+
+- Time series plots of S&P 500, VIX, 10-year Treasury yield, gold, DXY, and volatility to see how data moves over time.
+- Histograms of volatility before and after a log transform. Volatility is right-skewed, so we add a column `log_volatility` by taking log of volatility.
+- Scatter plots of each predictor (VIX, rate, gold, DXY) against `log_volatility` with a linear trend line.
+- Boxplots of `log_volatility` by weekday (Monday–Friday) to check whether volatility varies across days of the week'
+- Pairwise t-tests heatmap to assess whether differences in log-volatility across weekdays are statistically significant.
+- Correlation heatmap of `log_volatility` and the predictors.
+
+### Model Fitting
+
+We fitted the following models:
+
+- OLS Linear regression
+- Random Forest
+- XGBoost
+
+
+#### Model Description
+
+We use the OLS regression as a simple baseline model, it assumes a linear relationship between the predictors and the log-volatility, and simply estimates the line that minimizes the sum of squared errors between the predicted and log-volatility.
+
+We also use two non-linear, tree-based models, Random Forest and XGBoost, to capture potential nonlinear relationships. 
+
+The Random Forest model builds multiple decision trees and take the average of the predictions to reduce the variance.
+
+The XGBoost model use gradient boosting to build a sequence of decision trees and sum up the predictions to get the final result.
+
+#### Hyperparameters
+
+OLS regression model has no hyperparameters to tune.
+
+For Random Forest model, we grid search the following hyperparameter combinations:
+
+- Number of trees (`n_estimators`) [200, 400, 600]
+- Maximum tree depth (`max_depth`) [5, 15, 30]
+- Minimum samples to split a node (`min_samples_split`) [2, 5, 10]
+
+There are 27 combinations of hyperparameters for Random Forest model.
+
+For XGBoost model, we grid search the following hyperparameter combinations:
+
+- Number of trees (`n_estimators`) [200, 400, 600]
+- Maximum tree depth (`max_depth`) [5, 15, 30]
+- Learning rate [0.01, 0.05, 0.1]
+- Subsample ratio [0.5, 0.8, 1.0]
+
+There are 81 combinations of hyperparameters for XGBoost model.
+
+#### Training and Testing
+
+Since the data is time-series data, so we sort the data by date first and then split the data into 80% training and 20% testing sets using 80% quantile of date. Also, when grid searching the hyperparameters, we use time-series 5-foldcross-validation `cv=TimeSeriesSplit(n_splits=5)` to avoid data leakage.
+
+#### Evaluation Metrics
+
+Since the outcome variable is continuous, we use the following metrics to evaluate the model performance for all three models:
+
+- R^2: proportion of variance in the `log_volatility` that is explained by the predictors.
+- RMSE: root mean squared error of the predicted `log_volatility` and the true `log_volatility`, penalized for larger errors.
+- MAE: mean absolute error of the predicted `log_volatility` and the true `log_volatility`.

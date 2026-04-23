@@ -1,0 +1,10 @@
+.quarto-figure figcaption,
+figcaption {
+    text-align: center;
+    color: gray;
+}
+
+.cell-output-display > p {
+    text-align: center;
+    color: gray;
+}
