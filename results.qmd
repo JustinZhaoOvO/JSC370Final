@@ -720,4 +720,4 @@ fig.show()
 
 The feature importances ranking for both Random Forest and XGBoost models @fig-feature-importance are same. VIX is the dominant predictor for both models, followed by rate, dxy, and gold, and the weekday dummies are less important.
 
-Furthermore, the Random Forest model put more weight on vix, the importance reaches 0.8794, while the XGBoost model put more weight on rate, the importance reaches 0.3222. This suggests that the Random Forest model is more sensitive to the changes in vix, while the importance of VIX in XGBoost model is 0.6299, slightly lower than the Random Forest model and weighted more on rest of the predictors.
+Furthermore, the Random Forest model put more weight on vix, the importance reaches 0.8794, while the importance of VIX in XGBoost model is 0.6299, slightly lower than the Random Forest model and weighted more on rest of the predictors. This suggests that the Random Forest model is more sensitive to the changes in vix.

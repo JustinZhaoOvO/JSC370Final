@@ -16,11 +16,11 @@ We construct a 7-day rolling standard deviation of S&P 500 returns as the outcom
 - Is the 10-year Treasury yield (rate) related to changes in realized volatility?
 - Do gold prices and the U.S. Dollar Index (DXY) provide additional meaningful information about realized volatility?
 - Do day-of-week effects exist in realized volatility?
-- Which predictors are most important in explaining variation in realized volatility?
+- Which features are most associated with realized volatility?
 
 ## Key Findings
 
-- VIX is the strongest predictor of realized volatility, with a correlation of ~0.76 and the highest feature importance across all models.
+- VIX shows the strongest association with realized volatility, with a correlation of ~0.76 and the highest feature importance across all models.
 - Rate and gold contribute limited additional association with realized volatility beyond VIX.
 - DXY does not have a significant relationship with realized volatility.
 - No significant day-of-week effect on realized volatility was found.
@@ -30,6 +30,8 @@ We construct a 7-day rolling standard deviation of S&P 500 returns as the outcom
 ### Limitations
 
 - The models are using contemporaneous predictors to model the log-volatility on the same day, rather than strictly predicting the future volatility, so the analysis is only exploring the associations rather than predictive or causal relationship. They can capture the association between the predictors and log-volatility from models, but not intented as a predictive model.
+
+- The outcome is constructed using overlapping 7-day rolling windows, consecutive observations are highly autocorrelated. This may underestimate OLS standard errors and inflate t-statistics, so statistical significance should be interpreted with caution.
 
 - We only used four continuous predictors plus weekday. Many other potentially useful variables are not included, financial market are influenced by many other factors, which are not captured by the selected predictors.
 

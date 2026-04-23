@@ -735,7 +735,7 @@ plt.show()
 
 The feature importances ranking for both Random Forest and XGBoost models @fig-feature-importance are same. VIX is the dominant predictor for both models, followed by rate, dxy, and gold, and the weekday dummies are less important.
 
-Furthermore, the Random Forest model put more weight on vix, the importance reaches 0.8794, while the XGBoost model put more weight on rate, the importance reaches 0.3222. This suggests that the Random Forest model is more sensitive to the changes in vix, while the importance of VIX in XGBoost model is 0.6299, slightly lower than the Random Forest model and weighted more on rest of the predictors.
+Furthermore, the Random Forest model put more weight on vix, the importance reaches 0.8794, while the importance of VIX in XGBoost model is 0.6299, slightly lower than the Random Forest model and weighted more on rest of the predictors. This suggests that the Random Forest model is more sensitive to the changes in vix.
 
 
 ## 4. Conclusion and Summary
@@ -756,7 +756,7 @@ The 10-year Treasury yield has a weaker positive association with realized log-v
 
 3. Do gold prices and the U.S. Dollar Index (DXY) provide additional meaningful information about realized volatility?
 
-Gold shows a significant small negative association with realized log-volatility in the OLS model, with a p-value < 0.0001 and coefficient of -0.0001, and the U.S. Dollar Index (DXY) is not significant in the OLS model. Whereas, in the feature importance ranking for both Random Forest and XGBoost, gold is ranked fourth and dxy is ranked third. This sugguests that gold has a significant but very small linear effect on log-volatility, which means as gold price increases, log-volatility decreases slightly. In contrast, dxy is not significant in the OLS model but has a higher importance in Random Forest and XGBoost models, suggesting that dxy may capture some weak, non-linear pattern that are not captured by the linear regression model, but the importance is quite low and may not be meaningful.
+Gold shows a significant small negative association with realized log-volatility in the OLS model, with a p-value < 0.0001 and coefficient of -0.0001, and the U.S. Dollar Index (DXY) is not significant in the OLS model. Whereas, in the feature importance ranking for both Random Forest and XGBoost, gold is ranked fourth and dxy is ranked third. This sugguests that gold has a significant but very small linear effect on log-volatility, which means gold price increasing is associated with a slight decrease in log-volatility. In contrast, dxy is not significant in the OLS model but has a higher importance in Random Forest and XGBoost models, suggesting that dxy may capture some weak, non-linear pattern that are not captured by the linear regression model, but the importance is quite low and may not be meaningful.
 
 In conclusion, gold prices provide some tiny additional negative signal about realized log-volatility, and the U.S. Dollar Index (DXY) does not have a statisitcally siginificant linear relationship with log-volatility or a relatively high importance, so it does not provide substantial association with realized log-volatility.
 
