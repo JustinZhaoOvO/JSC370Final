@@ -646,7 +646,7 @@ coef_df = pd.DataFrame({
 display(coef_df)
 ```
 
-The summary of the OLS model @tbl-ols-coefficients indicates that VIX is the most siginificant predictor, and has a positive relationship with log-volatility, since its t-statistic is the largest(50.57). Beside that, rate and gold are also statistically significant in 0.05 level, rate has a positive relationship and gold has a negative relationship with log-volatility. Other predictors, dxy and weekday dummies, are not significant, so the US dollar index has a limited explanatory power for log-volatility and there is no enough evidence of day-of-week effects in log-volatility.
+The summary of the OLS model @tbl-ols-coefficients shows that VIX has the strongest positive association with log-volatility, since its t-statistic is the largest(50.57). Beside that, rate and gold are also statistically significant in 0.05 level, rate has a positive relationship and gold has a negative relationship with log-volatility. Other predictors, dxy and weekday dummies, are not significant, so the US dollar index has a limited explanatory power for log-volatility and there is no enough evidence of day-of-week effects in log-volatility.
 
 
 ```{python}

@@ -29,7 +29,7 @@ This analysis considers several variables that may be associated with market vol
 - U.S. Dollar Index (DXY): measures the strength of the U.S. dollar relative to other major currencies, reflecting global demand for the dollar  
 - Weekday: the day of the week (Monday–Friday), used as a categorical predictor to capture any day-of-week effects on volatility
 
-All these variables are simultaneously observed and publicly available on the same trading day as the outcome variable `volatility`, and none of them are derived volatility, no future data is used, so there is no data leakage. But since the predictors are contemporaneous, so our analysis is not predicting future volatility and not studying any causal relationship, but studying how these variables are associated with changes in realized market volatility.
+All these variables are simultaneously observed and publicly available on the same trading day as the outcome variable `volatility`, since the predictors are contemporaneous, our analysis is not predicting future volatility and not studying any causal relationship, but studying how these variables are associated with changes in realized market volatility.
 
 ### Research Questions
 
