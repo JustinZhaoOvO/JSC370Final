@@ -564,7 +564,7 @@ results = pd.concat([
 
 We will fit three models: OLS, Random Forest and XGBoost.
 
-By grid searching the hyperparameters, we found the best hyperparameters for each model as follows:
+By grid searching the hyperparameters, we found the best hyperparameters for each model as follows @tbl-hyperparameter-table:
 ```{python}
 #| label: tbl-hyperparameter-table
 #| echo: false
@@ -583,7 +583,7 @@ hyperparameter_summary = pd.DataFrame({
 display(hyperparameter_summary)
 ```
 
-The model performance with the best hyperparameters @tbl-hyperparameter-table on test setis as follows:
+The model performance with the best hyperparameters @tbl-model-performance on test set is as follows:
 
 ```{python}
 #| label: tbl-model-performance

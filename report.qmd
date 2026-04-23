@@ -338,7 +338,7 @@ plt.show()
 
 [View interactive time series plot](https://justinzhaoovo.github.io/JSC370Final/results.html#fig-interactive-timeseries-plot)
 
-This time series plot @fig-interactive-timeseries-plot shows that the S&P 500, all predictors, volatility and log-volatility over time. We can use the dropdown menu to switch between the plots. 
+This time series plot @fig-interactive-timeseries-plot shows that the S&P 500, all predictors, volatility and log-volatility over time. 
 
 We can see that S&P 500 and Gold has similar patterns, 
 VIX and 7-day window realized volatility has similar patterns, also 10-year Treasury Yield and U.S. Dollar Index(DXY) has similar patterns.
@@ -609,7 +609,7 @@ results = pd.concat([
 
 We will fit three models: OLS, Random Forest and XGBoost.
 
-By grid searching the hyperparameters, we found the best hyperparameters for each model as follows:
+By grid searching the hyperparameters, we found the best hyperparameters for each model as follows @tbl-hyperparameter-table:
 ```{python}
 #| label: tbl-hyperparameter-table
 #| echo: false
@@ -628,7 +628,7 @@ hyperparameter_summary = pd.DataFrame({
 display(hyperparameter_summary)
 ```
 
-The model performance with the best hyperparameters @tbl-hyperparameter-table on test setis as follows:
+The model performance with the best hyperparameters @tbl-model-performance on test set is as follows:
 
 ```{python}
 #| label: tbl-model-performance
@@ -743,7 +743,7 @@ Furthermore, the Random Forest model put more weight on vix, the importance reac
 
 ### Conclusion
 
-In this project, we used daily data from 2015 to 2025 to study how few financial variables are related to realized volatility of the S&P 500. We constructed a 7-day rolling standard deviation of returns as the outcome, log-transformed it to avoid right-skewness, and fit three models: OLS, Random Forest, and XGBoost.
+In this project, we used daily data from 2015 to 2025 to study how a few financial variables are related to realized volatility of the S&P 500. We constructed a 7-day rolling standard deviation of returns as the outcome, log-transformed it to avoid right-skewness, and fit three models: OLS, Random Forest, and XGBoost.
 
 Now we can answer the research questions proposed at the beginning:
 
@@ -781,7 +781,7 @@ However, worth noting, the R2 for all three models are relatively low, indicatin
 
 ### Limitations
 
-- The models are using contemporaneous predictors to model the log-volatility on the same day, rather than strictly predicting the future volatility, so the model should be interpreted as explantory rather than predictive. They can capture the relationships between the predictors and log-volatility from models, but predictive ability is limited.
+- The models are using contemporaneous predictors to model the log-volatility on the same day, rather than strictly predicting the future volatility, so the analysis is only exploring the associations rather than predictive or causal relationship. They can capture the association between the predictors and log-volatility from models, but not intented as a predictive model.
 
 - We only used four continuous predictors plus weekday. Many other potentially useful variables are not included, financial market are influenced by many other factors, which are not captured by the selected predictors.
 

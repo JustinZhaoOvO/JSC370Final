@@ -26,6 +26,19 @@ We construct a 7-day rolling standard deviation of S&P 500 returns as the outcom
 - No significant day-of-week effect on realized volatility was found.
 - OLS outperforms both tree-based models (RMSE = 0.369, R² = 0.434), suggesting the relationship between the predictors and log-volatility is largely linear.
 
+
+### Limitations
+
+- The models are using contemporaneous predictors to model the log-volatility on the same day, rather than strictly predicting the future volatility, so the analysis is only exploring the associations rather than predictive or causal relationship. They can capture the association between the predictors and log-volatility from models, but not intented as a predictive model.
+
+- We only used four continuous predictors plus weekday. Many other potentially useful variables are not included, financial market are influenced by many other factors, which are not captured by the selected predictors.
+
+- The predictors we used are mainly financial metrics of U.S. market, so it may not be generalizable to global market.
+
+- The analysis is based on log-volatility, so the interpretation of the results can not be directly applied to volatility.
+
+- The data is time-series data and the models are not time-series models, which may limit their ability to capture the dynamic patterns over time.
+
 ## Explore the Analysis
 
 Use the navigation bar above to explore each section of the report:
